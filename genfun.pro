@@ -15,12 +15,14 @@ END
 function gen_gaus1,x,param
 ;Gaussian with FWHM as a 3rd parameter
 	res=gaussian(x,[param[0:1],param[2]/2.35482])
+	res+=param[3]
 	return, res
 end
 function gen_gaus2,x,param
 ;Sum of 2 Gaussians with FWHM as a 3rd parameter
 	res=gaussian(x,[param[0:1],param[2]/2.35482])
 	res+=gaussian(x,[param[3:4],param[5]/2.35482])
+	res+=param[6]
 	return, res
 end
 function gen_gaus3,x,param
@@ -28,25 +30,29 @@ function gen_gaus3,x,param
 	res=gaussian(x,[param[0:1],param[2]/2.35482])
 	res+=gaussian(x,[param[3:4],param[5]/2.35482])
 	res+=gaussian(x,[param[6:7],param[8]/2.35482])
+	res+=param[9]
 	return, res
 end
 
 function gen_voigt1,x,param
 ;Voigt profile
-	res=gen_voigt(x,param[0:2],inst_vel=param[3])
+	res=gen_voigt(x,param[0:2],inst_vel=param[4])
+	res+=param[3]
 	return, res
 end
 function gen_voigt2,x,param,inst_vel
 ;Sum of 2 Voigts
-	res=gen_voigt(x,param[0:2],inst_vel=param[6])
-	res+=gen_voigt(x,param[3:5],inst_vel=param[6])
+	res=gen_voigt(x,param[0:2],inst_vel=param[7])
+	res+=gen_voigt(x,param[3:5],inst_vel=param[7])
+	res+=param[6]
 	return, res
 end
 function gen_voigt3,x,param,inst_vel
 ;Sum of 3 Voigts
-	res=gen_voigt(x,param[0:2],inst_vel=param[9])
-	res+=gen_voigt(x,param[3:5],inst_vel=param[9])
-	res+=gen_voigt(x,param[6:8],inst_vel=param[9])
+	res=gen_voigt(x,param[0:2],inst_vel=param[10])
+	res+=gen_voigt(x,param[3:5],inst_vel=param[10])
+	res+=gen_voigt(x,param[6:8],inst_vel=param[10])
+	res+=param[9]
 	return, res
 end
 
@@ -217,8 +223,9 @@ if ~ QUIET then cgplot,x,y,psym=7,color='red',thick=5
 ;cgoplot,x,nonoise,color='pink'
 
 ;calculates dispersion to predict FWHM
-yn=y/max(y)
+yn=(y-min(y))/(max(y)-min(y))
 use=where(yn gt 0.1)
+wherecont=where(yn lt 0.1)
 ;print, use
 usemm=minmax(use)
 if usemm[0] ge 2 then usemm[0]=usemm[0]-2
@@ -233,7 +240,8 @@ moment2=total(xuse^2*yn)
 disp=sqrt(moment2-moment1^2)
 
 
-
+contmin=min(y[wherecont])
+contmax=max(y[wherecont])
 mut=0.35
 vmin=min(x)
 vmax=max(x)
@@ -241,6 +249,7 @@ ymin=max(y)*0.1
 ymax=max(y)*1.2
 dispmin=0.2*disp
 dispmax=2.5*disp
+
 par_min_i=[ymin,vmin,dispmin]
 par_max_i=[ymax,vmax,dispmax]
 param_min=par_min_i
@@ -249,11 +258,14 @@ for i=2,N_lines do begin
 	param_min=[param_min,par_min_i]
 	param_max=[param_max,par_max_i]
 end
+param_min=[param_min,contmin]
+param_max=[param_max,contmax]
 N=1000
 N_param=N_elements(param_min)
 param=fltarr(N_param,2*N)
 errors=fltarr(2*N)
 ;generate
+
 for i=0, N-1 do begin
 	for j=0, N_param-1 do begin
 		param[j,i]=(param_max[j]-param_min[j])*randomu(seed)+param_min[j]
@@ -388,8 +400,9 @@ sort_by_vel=sort(vel2sort)
 sbv=3*sort_by_vel
 genparam=bestparam[[sbv[0],sbv[0]+1,sbv[0]+2]]
 for j=1, N_lines-1 do genparam=[genparam,bestparam[[sbv[j],sbv[j]+1,sbv[j]+2]]]
+genparam=[genparam,bestparam[N_param-1]]
 ;print, genparam
-;stop
+
 ;	param[i,*]=param[i,[sbv[0],sbv[0]+1,sbv[0]+2,sbv[1],sbv[1]+1,sbv[1]+2,sbv[2],sbv[2]+1,sbv[2]+2]]
 
 if ~ QUIET then print,'======GEN TIME======'
@@ -397,16 +410,16 @@ if ~ QUIET then print, systime(1)-time
 if ~ QUIET then cgoplot, xdots,call_function('gen_'+model_tN,xdots,[genparam,inst_vel]),color='yellow',thick=3
 if ~ QUIET then print,'========GEN========='
 if ~ QUIET then print, genparam
-;stop
+
 ;mpfit
 
 model_param=genparam
 if model_type eq 'voigt' then begin
-	parinfo=replicate({limited:[0,0],limits:[0,0],fixed:0,tied:''},3*N_lines+1)
-	parinfo[3*N_lines].fixed=1
+	parinfo=replicate({limited:[0,0],limits:[0,0],fixed:0,tied:''},N_param+1)
+	parinfo[N_Param].fixed=1
 	model_param=[model_param,inst_vel]
 	endif else begin
-	parinfo=replicate({limited:[0,0],limits:[0,0],tied:''},3*N_lines)
+	parinfo=replicate({limited:[0,0],limits:[0,0],tied:''},N_param)
 	endelse
 for i=0, N_Lines-1 do begin
 	parinfo[i*3].limited=[1,1]
@@ -444,19 +457,29 @@ if do_AMP_ratio then begin
 	sbv=3*sort_by_vel
 	res=mpfitparam[[sbv[0],sbv[0]+1,sbv[0]+2]]
 	for j=1, N_lines-1 do res=[res,mpfitparam[[sbv[j],sbv[j]+1,sbv[j]+2]]]
-
+	res=[res,mpfitparam[N_param-1]] ;continuum
 	;cgoplot,x,y,psym=1,color='green'
-	if not QUIET then print,'=====mpfit====='
-	if not QUIET then print,res
 	yfit=call_function('gen_'+model_tN,x,[res,inst_vel])
-	if ~ QUIET then cgoplot,xdots,call_function('gen_'+model_tN,xdots,[res,inst_vel]),color='blue',thick=2
-	if ~ QUIET then cgoplot,x[usemm],[0,0],psym=2,thick=10,color='green'
+	if ~ QUIET then begin
+		print,'=====mpfit====='
+		print,res
+		model_tN_single=model_type + '1'
+		for j=0, N_lines-1 do begin
+			cgoplot,xdots,call_function('gen_'+model_tN_single $
+				,xdots,[res[3*j:3*j+2],0,inst_vel]),color='cyan',thick=2
+			endfor
+		ycont=intarr(N_elements(xdots))+res[N_param-1]
+		cgoplot,xdots,ycont,color='cyan',thick=2
+		cgoplot,xdots,call_function('gen_'+model_tN,xdots,[res,inst_vel]),color='blue',thick=2
+		cgoplot,x[usemm],[0,0],psym=2,thick=10,color='green'
+		print,'===TOTAL TIME==='
+		print, systime(1)-time
+		endif
 	;cgoplot,xdots,voigt2(xdots,res,inst_vel=22.)
-	;cgoplot,xdots,gen_voigt(xdots,res[0:2],inst_vel=22.),color='blue'
-	;cgoplot,xdots,gen_voigt(xdots,res[3:5],inst_vel=22.),color='blue'
-	;cgoplot,xdots,gen_voigt(xdots,res[6:8],inst_vel=22.),color='blue'
-if not QUIET then print,'===TOTAL TIME==='
-if not QUIET then print, systime(1)-time
+	;if ~ QUIET then cgoplot,xdots,gen_voigt(xdots,res[0:2],inst_vel=22.),color='blue'
+	;if ~ QUIET then cgoplot,xdots,gen_voigt(xdots,res[3:5],inst_vel=22.),color='blue'
+	;if ~ QUIET then cgoplot,xdots,gen_voigt(xdots,res[6:8],inst_vel=22.),color='blue'
+	;cgoplot,cdots,
 ;print, gaussian1
 ;if not QUIET then print, res
 ;this string is used if profile was created with generate_profile
@@ -471,6 +494,6 @@ reserror=res
 for i=0,N_Lines-1 do begin
 	for j=0,2 do  reserror[3*i+j]=res[3*i+j]*errorK[j]/SNR
 	end
-if not keyword_set(quiet) then print, 'inst_vel=',inst_vel
+if ~ QUIET then print, 'inst_vel=',inst_vel
 return,res
 end
