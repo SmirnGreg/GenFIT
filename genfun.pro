@@ -75,7 +75,7 @@ end
 function gen_linecounter,x,y,usemm=usemm,moments=moments,QUIET=QUIET
 ;Speculates number of lines must be used to fit y=model(x)
 if keyword_set(QUIET) then QUIET = 1 else QUIET = 0
-yn=y/max(y)
+yn=(y-min(y))/(max(y)-min(y))
 use=where(yn gt 0.1)
 usemm=minmax(use)
 ;print, usemm
