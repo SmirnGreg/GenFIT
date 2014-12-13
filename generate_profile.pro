@@ -6,13 +6,13 @@ FUNCTION Dispersion, array
 return,Average(array^2)-Average(array)^2
 end
 
-FUNCTION CLB_VOIGT, x, param, inst_vel=inst_vel
+FUNCTION gen_VOIGT, x, param, inst_vel=inst_vel
 
   vel=inst_vel/2.35482
-  param[2]=param[2]/2.35482
-  b=(x-param[1])/(sqrt(2.)*param[2])
-  y=vel/(sqrt(2.)*param[2])
-  res=voigt(y,b)/(sqrt(2.*!pi)*param[2])
+  disp=param[2]/2.35482
+  b=(x-param[1])/(sqrt(2.)*disp)
+  y=vel/(sqrt(2.)*disp)
+  res=voigt(y,b)/(sqrt(2.*!pi)*disp)
   norm=max(res)
   res=param[0]*res/norm
 
@@ -80,9 +80,9 @@ if do_VOIGT eq 0 then begin
 	if do_gauss_3 eq 1 then Y=Y+gaussian(V,[ampl3,v03,disp3/2.35482])
 	;print,'GAUSSIAN'
 	endif else begin
-	Y=clb_voigt(V,[ampl,v0,disp],inst_vel=inst_vel)
-	if do_gauss_2 eq 1 then Y=Y+clb_voigt(V,[ampl2,v02,disp2],inst_vel=inst_vel)
-	if do_gauss_3 eq 1 then Y=Y+clb_voigt(V,[ampl3,v03,disp3],inst_vel=inst_vel)
+	Y=gen_voigt(V,[ampl,v0,disp],inst_vel=inst_vel)
+	if do_gauss_2 eq 1 then Y=Y+gen_voigt(V,[ampl2,v02,disp2],inst_vel=inst_vel)
+	if do_gauss_3 eq 1 then Y=Y+gen_voigt(V,[ampl3,v03,disp3],inst_vel=inst_vel)
 	;print, 'VOIGT'
 	;print,y
 	end

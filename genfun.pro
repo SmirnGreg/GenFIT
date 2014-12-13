@@ -69,11 +69,8 @@ end
 function gen_linecounter,x,y,usemm=usemm,moments=moments,QUIET=QUIET
 ;Speculates number of lines must be used to fit y=model(x)
 if keyword_set(QUIET) then QUIET = 1 else QUIET = 0
-
 yn=y/max(y)
 use=where(yn gt 0.1)
-usemin=min(use)
-usemax=max(use)
 usemm=minmax(use)
 ;print, usemm
 ;usemm[0]=max([usemm[0]-2,0])
@@ -81,8 +78,11 @@ usemm=minmax(use)
 ;print,usemm
 
 ;stop
+if usemm[0] ge 2 then usemm[0]=usemm[0]-2
+if usemm[1] lt N_Elements(yn)-3 then usemm[1]=usemm[1]+2
 yn=yn[usemm[0]:usemm[1]]
 xuse=x[usemm[0]:usemm[1]]
+
 yn=yn/total(yn)
 ;print, total(yn)
 moment1=total(xuse*yn)
@@ -219,6 +219,7 @@ if ~ QUIET then cgplot,x,y,psym=7,color='red',thick=5
 ;calculates dispersion to predict FWHM
 yn=y/max(y)
 use=where(yn gt 0.1)
+;print, use
 usemm=minmax(use)
 if usemm[0] ge 2 then usemm[0]=usemm[0]-2
 if usemm[1] lt N_Elements(yn)-3 then usemm[1]=usemm[1]+2
