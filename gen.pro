@@ -28,6 +28,8 @@ y=data[*,1]+10
 ;print,y
 N_dots=300; to plot
 xdots=findgen(N_dots)*(max(x)-min(x))/N_dots+min(x)
+err=sqrt(y+1000.)
+
 
 ;stop
 ;PROFILE APRIORY PARAMETERS
@@ -36,7 +38,7 @@ N_lines=gen_linecounter(x,y,usemm=usemm)
 if do_voigt then model_type='voigt' else model_type='gaus'
 ;call genfun
 ;N_lines=3
-res= genfun(x,y,model_type,N_lines,FWHM_eq=[1,1],inst_vel=inst_vel,yfit=yfit,$
+res= genfun(x,y,err,model_type,N_lines,FWHM_eq=[1,1],inst_vel=inst_vel,yfit=yfit,$
 	reserror=reserror,SNR=SNR);, AMP_ratio=[4,8])
 print,'Result ', res
 print,'Errors ', reserror

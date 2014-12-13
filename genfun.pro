@@ -72,6 +72,23 @@ function gen_ResSumSquares,param,x,y,model_tN,inst_vel=inst_vel
 	return, total((modely-y)^2)
 end
 
+function gen_WeightSumSquares,param,x,y,err,model_tN,inst_vel=inst_vel
+;Returns Weighted Residual Sum of Squares for x,y with model_tN
+;inst_vel is required fot voigt model
+	if strmid(model_tN,0,5) eq 'voigt' then begin
+		if not keyword_set(inst_vel) then begin
+			print, 'INST_VEL???'
+			stop
+			endif
+		modely=call_function('gen_'+model_tN,x,[param,inst_vel])
+		endif else begin
+		modely=call_function('gen_'+model_tN,x,param)
+		endelse
+
+	return, total(((modely-y)/err)^2)
+end
+
+
 function gen_linecounter,x,y,usemm=usemm,moments=moments,QUIET=QUIET
 ;Speculates number of lines must be used to fit y=model(x)
 if keyword_set(QUIET) then QUIET = 1 else QUIET = 0
@@ -115,7 +132,7 @@ end
 
 
 
-FUNCTION genfun,x,y,model_type,N_lines,QUIET=QUIET,inst_vel=inst_vel,yfit=yfit,$
+FUNCTION genfun,x,y,err,model_type,N_lines,QUIET=QUIET,inst_vel=inst_vel,yfit=yfit,$
 	reserror=reserror,SNR=SNR,FWHM_eq=FWHM_eq, AMP_ratio=AMP_ratio
 ;+
 ; NAME:
@@ -132,12 +149,12 @@ FUNCTION genfun,x,y,model_type,N_lines,QUIET=QUIET,inst_vel=inst_vel,yfit=yfit,$
 ;    Fitting spectral lines
 ;
 ; CALLING SEQUENCE:
-;   result = GENFUN(X, Y, model_type, N_lines, /Quiet, inst_vel=inst_vel, yfit=yfit)
+;   result = GENFUN(X, Y, ERR, model_type, N_lines, /Quiet, inst_vel=inst_vel, yfit=yfit)
 ;
 ; DESCRIPTION:
 ;
 ;  This function uses both genetic algorithm and MPFIT algorithm to fit x,y
-;  with 'N_lines'-component 'model_type' profile.
+;  with 'N_lines'-component 'model_type' profile. ERR -- errors of y.
 ;  Given the data, GENFUN finds the best set
 ;  of model parameters which match the data (in a least-squares
 ;  sense) and returns them in an array.
@@ -263,7 +280,7 @@ param_max=[param_max,contmax]
 N=1000
 N_param=N_elements(param_min)
 param=fltarr(N_param,2*N)
-errors=fltarr(2*N)
+wss=fltarr(2*N)
 ;generate
 
 for i=0, N-1 do begin
@@ -358,9 +375,10 @@ while eps gt 1 do begin
 		end
 	;looking for best params, sorting
 	for i=0,2*N-1 do begin
-		errors[i]=gen_ResSumSquares(param[*,i],x,y,model_tN,inst_vel=inst_vel)
+		;rss[i]=gen_ResSumSquares(param[*,i],x,y,model_tN,inst_vel=inst_vel)
+		wss[i]=gen_WeightSumSquares(param[*,i],x,y,err,model_tN,inst_vel=inst_vel)
 	end
-	order=sort(errors)
+	order=sort(wss)
 	param=(param[*,order])
 	;kill the worst N params
 	param[*,N:2*N-1]=0
@@ -374,7 +392,7 @@ while eps gt 1 do begin
 	;cgoplot,xdots,modelgen(xdots,param[0,*]),color=color
 	if color gt 2 then color=color-1
 	;exit if slow
-	newtotal=total(errors)
+	newtotal=total(wss)
 	epserror=abs(newtotal-oldtotal)/newtotal
 	if epserror lt 0.03 then eps=eps-0.1
 	;next
@@ -385,9 +403,10 @@ while eps gt 1 do begin
 end
 ;looking for best params and one more sorting
 for i=0,2*N-1 do begin
-	errors[i]=gen_ResSumSquares(param[*,i],x,y,model_tN,inst_vel=inst_vel)
+	;rss[i]=gen_ResSumSquares(param[*,i],x,y,model_tN,inst_vel=inst_vel)
+	wss[i]=gen_WeightSumSquares(param[*,i],x,y,err,model_tN,inst_vel=inst_vel)
 end
-order=sort(errors)
+order=sort(wss)
 param=(param[*,order])
 
 ;print, transpose(param[0:N-1,*])
@@ -448,7 +467,6 @@ if do_AMP_ratio then begin
 	print, transpose(parinfo[*].tied)
 	;stop
 	end
-  	err=0.1*(y/y)
 	mpfitparam=mpfitfun('gen_'+model_tN,x,y,err,model_param,yfit=yfit,parinfo=parinfo,quiet=quiet)
 	;sort by velocity
 	vel2sort=mpfitparam[1]
