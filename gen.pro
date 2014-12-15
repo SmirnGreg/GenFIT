@@ -23,7 +23,7 @@ data=generate_profile(SN=1,gaus1=[40,10,10],gaus2=[60,60,10],inst_vel=inst_vel,f
 ;Function Generate_Profile,SN=SN,gaus1=gaus1,gaus2=gaus2,gaus3=gaus3,do_voigt=do_voigt,inst_vel=inst_vel,fileroot=fileroot ;description
 ;print, data
 x=data[*,0]
-y=data[*,1]+10
+y=data[*,1]+10+0.1*x+0.005*x^2
 ;print, x,y
 ;print,y
 N_dots=300; to plot
@@ -37,9 +37,9 @@ err=sqrt(y+1000.)
 N_lines=gen_linecounter(x,y,usemm=usemm)
 if do_voigt then model_type='voigt' else model_type='gaus'
 ;call genfun
-;N_lines=3
+N_lines=2
 res= genfun(x,y,err,model_type,N_lines,FWHM_eq=[1,1],inst_vel=inst_vel,yfit=yfit,$
-	reserror=reserror,SNR=SNR);, AMP_ratio=[4,8])
+	reserror=reserror,SNR=SNR,/POLY_cont);, AMP_ratio=[4,8])
 print,'Result ', res
 print,'Errors ', reserror
 print,'SNR ', SNR

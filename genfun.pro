@@ -56,6 +56,51 @@ function gen_voigt3,x,param,inst_vel
 	return, res
 end
 
+function gen_gauspoly1,x,param
+;Gaussian with ax^2+bx+c continuum
+	res=gaussian(x,[param[0:1],param[2]/2.35482])
+	res+=poly(x,param[3:5])
+	return, res
+end
+function gen_gauspoly2,x,param
+;Sum of 2 Gaussians with ax^2+bx+c continuum
+	res=gaussian(x,[param[0:1],param[2]/2.35482])
+	res+=gaussian(x,[param[3:4],param[5]/2.35482])
+	res+=poly(x,param[6:8])
+	return, res
+end
+function gen_gauspoly3,x,param
+;Sum of 3 Gaussians with ax^2+bx+c continuum
+	res=gaussian(x,[param[0:1],param[2]/2.35482])
+	res+=gaussian(x,[param[3:4],param[5]/2.35482])
+	res+=gaussian(x,[param[6:7],param[8]/2.35482])
+	res+=poly(x,param[9:11])
+	return, res
+end
+
+function gen_voigtpoly1,x,param
+;Voigt profile with ax^2+bx+c continuum
+	res=gen_voigt(x,param[0:2],inst_vel=param[6])
+	res+=poly(x,param[3:5])
+	return, res
+end
+function gen_voigtpoly2,x,param,inst_vel
+;Sum of 2 Voigts with ax^2+bx+c continuum
+	res=gen_voigt(x,param[0:2],inst_vel=param[9])
+	res+=gen_voigt(x,param[3:5],inst_vel=param[9])
+	res+=poly(x,param[6:8])
+	return, res
+end
+function gen_voigtpoly3,x,param,inst_vel
+;Sum of 3 Voigts with ax^2+bx+c continuum
+	res=gen_voigt(x,param[0:2],inst_vel=param[12])
+	res+=gen_voigt(x,param[3:5],inst_vel=param[12])
+	res+=gen_voigt(x,param[6:8],inst_vel=param[12])
+	res+=poly(x,param[9:11])
+	return, res
+end
+
+
 function gen_ResSumSquares,param,x,y,model_tN,inst_vel=inst_vel
 ;Returns Residual Sum of Squares for x,y with model_tN
 ;inst_vel is required fot voigt model
@@ -178,6 +223,7 @@ FUNCTION genfun,x,y,err,model_type,N_lines,QUIET=QUIET,inst_vel=inst_vel,yfit=yf
 ;	- AMP_ratio -- float 1-dimension N_lines-size array. If AMP_ratio[i]/AMP_ratio[j]=C then AMP[i]/AMP[j]=C,
 ; where components are sorted by velocity. If AMP_ratio[i]=0 then do not use.
 ; NOTE! AMP_ratio will be normalized to max(AMP_ratio)=1
+;   - POLY_cont -- keyword for fitting with ax^2+bx+c continuum (constant continuum is set do default)
 
 time=systime(1)
 do_FWHM_eq=0
@@ -231,7 +277,11 @@ if keyword_set(AMP_ratio) then begin
 if keyword_set(POLY_cont) then do_POLY_cont=1 else do_POLY_Cont=0
 if keyword_set(QUIET) then do_QUIET = 1 else do_QUIET = 0
 if keyword_set(inst_vel) then inst_vel=inst_vel else inst_vel = 22.
-model_tN=STRCOMPRESS(model_type + string(N_Lines),/remove)
+if do_POLY_cont then begin
+	model_tN=STRCOMPRESS(model_type+ 'poly' + string(N_Lines),/remove)
+	endif else begin
+	model_tN=STRCOMPRESS(model_type + string(N_Lines),/remove)
+	endelse
 
 
 N_dots=300; to plot
@@ -257,8 +307,8 @@ moment2=total(xuse^2*yn)
 disp=sqrt(moment2-moment1^2)
 
 
-contmin=min(y[wherecont])
-contmax=max(y[wherecont])
+contmin=min(y[wherecont],contmini)
+contmax=max(y[wherecont],contmaxi)
 mut=0.35
 vmin=min(x)
 vmax=max(x)
@@ -275,8 +325,21 @@ for i=2,N_lines do begin
 	param_min=[param_min,par_min_i]
 	param_max=[param_max,par_max_i]
 end
+
+if do_POLY_cont then begin
+	;continuum a priori set as ax^2+bx+c
+	;fit with MPFIT y=P[0]+P[1]*x+P[2]*x^2 at x[wherecont]
+	cont_0=[(contmin+contmax)*0.5,0,0]
+	cont=mpfitfun('poly',x[wherecont],y[wherecont],err[wherecont],cont_0,contfit=contfit)
+	;if ~ do_QUIET then cgoplot,xdots,poly(xdots,cont),color='green',thick=2
+	contmin=cont
+	contmax=cont ;it will mute anyway
+	end
+
 param_min=[param_min,contmin]
 param_max=[param_max,contmax]
+
+
 N=1000
 N_param=N_elements(param_min)
 param=fltarr(N_param,2*N)
@@ -419,7 +482,8 @@ sort_by_vel=sort(vel2sort)
 sbv=3*sort_by_vel
 genparam=bestparam[[sbv[0],sbv[0]+1,sbv[0]+2]]
 for j=1, N_lines-1 do genparam=[genparam,bestparam[[sbv[j],sbv[j]+1,sbv[j]+2]]]
-genparam=[genparam,bestparam[N_param-1]]
+if do_POLY_cont then genparam=[genparam,bestparam[N_param-3:N_param-1]] $
+	else genparam=[genparam,bestparam[N_param-1]]
 ;print, genparam
 
 ;	param[i,*]=param[i,[sbv[0],sbv[0]+1,sbv[0]+2,sbv[1],sbv[1]+1,sbv[1]+2,sbv[2],sbv[2]+1,sbv[2]+2]]
@@ -477,7 +541,8 @@ if do_AMP_ratio then begin
 	sbv=3*sort_by_vel
 	res=mpfitparam[[sbv[0],sbv[0]+1,sbv[0]+2]]
 	for j=1, N_lines-1 do res=[res,mpfitparam[[sbv[j],sbv[j]+1,sbv[j]+2]]]
-	res=[res,mpfitparam[N_param-1]] ;continuum
+	if do_POLY_cont then res=[res,mpfitparam[N_param-3:N_param-1]] $
+		else res=[res,mpfitparam[N_param-1]] ;continuum
 	;cgoplot,x,y,psym=1,color='green'
 	yfit=call_function('gen_'+model_tN,x,[res,inst_vel])
 	if ~ do_QUIET then begin
@@ -488,7 +553,8 @@ if do_AMP_ratio then begin
 			cgoplot,xdots,call_function('gen_'+model_tN_single $
 				,xdots,[res[3*j:3*j+2],0,inst_vel]),color='cyan',thick=2
 			endfor
-		ycont=intarr(N_elements(xdots))+res[N_param-1]
+		if do_POLY_cont then ycont=poly(xdots,res[N_param-3:N_param-1]) $
+			else ycont=intarr(N_elements(xdots))+res[N_param-1]
 		cgoplot,xdots,ycont,color='cyan',thick=2
 		cgoplot,xdots,call_function('gen_'+model_tN,xdots,[res,inst_vel]),color='blue',thick=2
 		cgoplot,x[usemm],[0,0],psym=2,thick=10,color='green'
