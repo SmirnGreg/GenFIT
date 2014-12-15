@@ -133,7 +133,7 @@ end
 
 
 FUNCTION genfun,x,y,err,model_type,N_lines,QUIET=QUIET,inst_vel=inst_vel,yfit=yfit,$
-	reserror=reserror,SNR=SNR,FWHM_eq=FWHM_eq, AMP_ratio=AMP_ratio
+	reserror=reserror,SNR=SNR,FWHM_eq=FWHM_eq, AMP_ratio=AMP_ratio, POLY_cont=POLY_cont
 ;+
 ; NAME:
 ;   GENFUN
@@ -228,15 +228,15 @@ if keyword_set(AMP_ratio) then begin
 
 ;print, do_FWHM_eq
 ;stop
-
-if keyword_set(QUIET) then QUIET = 1 else QUIET = 0
+if keyword_set(POLY_cont) then do_POLY_cont=1 else do_POLY_Cont=0
+if keyword_set(QUIET) then do_QUIET = 1 else do_QUIET = 0
 if keyword_set(inst_vel) then inst_vel=inst_vel else inst_vel = 22.
 model_tN=STRCOMPRESS(model_type + string(N_Lines),/remove)
 
 
 N_dots=300; to plot
 xdots=findgen(N_dots)*(max(x)-min(x))/N_dots+min(x)
-if ~ QUIET then cgplot,x,y,psym=7,color='red',thick=5
+if ~ do_QUIET then cgplot,x,y,psym=7,color='red',thick=5
 ;cgoplot,x,nonoise,color='pink'
 
 ;calculates dispersion to predict FWHM
@@ -424,11 +424,13 @@ genparam=[genparam,bestparam[N_param-1]]
 
 ;	param[i,*]=param[i,[sbv[0],sbv[0]+1,sbv[0]+2,sbv[1],sbv[1]+1,sbv[1]+2,sbv[2],sbv[2]+1,sbv[2]+2]]
 
-if ~ QUIET then print,'======GEN TIME======'
-if ~ QUIET then print, systime(1)-time
-if ~ QUIET then cgoplot, xdots,call_function('gen_'+model_tN,xdots,[genparam,inst_vel]),color='yellow',thick=3
-if ~ QUIET then print,'========GEN========='
-if ~ QUIET then print, genparam
+if ~ do_QUIET then begin
+	print,'======GEN TIME======'
+	print, systime(1)-time
+	cgoplot, xdots,call_function('gen_'+model_tN,xdots,[genparam,inst_vel]),color='yellow',thick=3
+	print,'========GEN========='
+	print, genparam
+	end
 
 ;mpfit
 
@@ -467,7 +469,7 @@ if do_AMP_ratio then begin
 	print, transpose(parinfo[*].tied)
 	;stop
 	end
-	mpfitparam=mpfitfun('gen_'+model_tN,x,y,err,model_param,yfit=yfit,parinfo=parinfo,quiet=quiet)
+	mpfitparam=mpfitfun('gen_'+model_tN,x,y,err,model_param,yfit=yfit,parinfo=parinfo,quiet=do_QUIET)
 	;sort by velocity
 	vel2sort=mpfitparam[1]
 	for j=1, N_lines-1 do vel2sort=[vel2sort,mpfitparam[j*3+1]]
@@ -478,7 +480,7 @@ if do_AMP_ratio then begin
 	res=[res,mpfitparam[N_param-1]] ;continuum
 	;cgoplot,x,y,psym=1,color='green'
 	yfit=call_function('gen_'+model_tN,x,[res,inst_vel])
-	if ~ QUIET then begin
+	if ~ do_QUIET then begin
 		print,'=====mpfit====='
 		print,res
 		model_tN_single=model_type + '1'
@@ -494,12 +496,12 @@ if do_AMP_ratio then begin
 		print, systime(1)-time
 		endif
 	;cgoplot,xdots,voigt2(xdots,res,inst_vel=22.)
-	;if ~ QUIET then cgoplot,xdots,gen_voigt(xdots,res[0:2],inst_vel=22.),color='blue'
-	;if ~ QUIET then cgoplot,xdots,gen_voigt(xdots,res[3:5],inst_vel=22.),color='blue'
-	;if ~ QUIET then cgoplot,xdots,gen_voigt(xdots,res[6:8],inst_vel=22.),color='blue'
+	;if ~ do_QUIET then cgoplot,xdots,gen_voigt(xdots,res[0:2],inst_vel=22.),color='blue'
+	;if ~ do_QUIET then cgoplot,xdots,gen_voigt(xdots,res[3:5],inst_vel=22.),color='blue'
+	;if ~ do_QUIET then cgoplot,xdots,gen_voigt(xdots,res[6:8],inst_vel=22.),color='blue'
 	;cgoplot,cdots,
 ;print, gaussian1
-;if not QUIET then print, res
+;if not do_QUIET then print, res
 ;this string is used if profile was created with generate_profile
 ;print, max(Y)/sqrt(Dispersion(nonoise-y)),(abs(gaussian1-res)/gaussian1)
 SNR=max(yfit)/sqrt(variance(y-yfit))
@@ -513,6 +515,6 @@ for i=0,N_Lines-1 do begin
 	for j=0,2 do  reserror[3*i+j]=res[3*i+j]*errorK[j]/SNR
 	end
 reserror(N_param-1)=0
-if ~ QUIET then print, 'inst_vel=',inst_vel
+if ~ do_QUIET then print, 'inst_vel=',inst_vel
 return,res
 end
