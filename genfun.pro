@@ -322,10 +322,10 @@ for i=0, N-1 do begin
 	;sbv=3*sort_by_vel
 	;param[i,*]=param[i,[sbv[0],sbv[0]+1,sbv[0]+2,sbv[1],sbv[1]+1,sbv[1]+2,sbv[2],sbv[2]+1,sbv[2]+2]]
 end
-eps=2
+eps=1
 color=200
 oldtotal=0
-while eps gt 1 do begin
+while eps gt 0 do begin
 	;shuffle first N (all) params
 	shuffleorder=indgen(N)
 	shuffleorder=shuffleorder(sort(randomu(seed,N)))
@@ -512,6 +512,7 @@ reserror=res
 for i=0,N_Lines-1 do begin
 	for j=0,2 do  reserror[3*i+j]=res[3*i+j]*errorK[j]/SNR
 	end
+reserror(N_param-1)=0
 if ~ QUIET then print, 'inst_vel=',inst_vel
 return,res
 end
