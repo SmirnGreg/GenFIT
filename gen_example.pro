@@ -10,8 +10,8 @@ pro gen_example
 
 
 ;READ DATA FROM FILE
-root='C:\astrowork\Genetic Algoritm\Function\'
-data=readfits(root+'prof.fits',h)
+root='C:\astrowork\Genetic Algoritm\'
+;data=readfits(root+'test_gen2_1_ha.fts',h)
 ;GENERATE DATA with gausI parameters
 ;gaussian1=randomu(seed,3)*40+15 ;gaus1 is random
 gaussian1=[10,45,5] ;gaus1 is manually set
@@ -23,7 +23,7 @@ data=generate_profile(SN=0.1,gaus1=[40,10,10],gaus2=[60,60,10],inst_vel=inst_vel
 ;Function Generate_Profile,SN=SN,gaus1=gaus1,gaus2=gaus2,gaus3=gaus3,do_voigt=do_voigt,inst_vel=inst_vel,fileroot=fileroot ;description
 ;print, data
 x=data[*,0]
-y=data[*,1]+10+0.2*x+0.0005*x^2
+y=data[*,1];+10+0.2*x+0.0005*x^2
 window,1
 cgplot, x,deriv(x,deriv(x,y))*max(y),color='red',thick=3
 cgoplot, x,y,color='green',thick=2,psym=7
