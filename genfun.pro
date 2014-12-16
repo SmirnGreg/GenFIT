@@ -332,7 +332,7 @@ if do_POLY_cont then begin
 	cont_0=[(contmin+contmax)*0.5,0,0]
 	cont=mpfitfun('poly',x[wherecont],y[wherecont],err[wherecont],cont_0,contfit=contfit,quiet=do_QUIET)
 	;if ~ do_QUIET then cgoplot,xdots,poly(xdots,cont),color='green',thick=2
-	;if ~ do_QUIET then cgoplot,x[wherecont],y[wherecont],psym=7,color='green',thick=5
+	if ~ do_QUIET then cgoplot,x[wherecont],y[wherecont],psym=7,color='green',thick=5
 	contmin=cont
 	contmax=cont ;it will mute anyway
 	end
@@ -571,9 +571,22 @@ if do_AMP_ratio then begin
 ;this string is used if profile was created with generate_profile
 ;print, max(Y)/sqrt(Dispersion(nonoise-y)),(abs(gaussian1-res)/gaussian1)
 lines_amp=res[0]
+lines_vel=res[1]
+lines_disp=res[2]/2.35482
+
 for i=1,N_Lines-1 do begin
 	lines_amp=res[3*i]
+	lines_vel=res[3*i+1]
+	lines_disp=res[3*i+2]/2.35482
 	end
+if model_type eq 'voigt' then begin
+	lines_disp=sqrt(lines_disp^2+(inst_vel/2.35482)^2)
+	endif
+;lines_area=where(abs(x-lines_vel[0]) lt 3*lines_disp[0])
+;for i=1,N_Lines-1 do lines_area=[lines_area,where(abs(x-lines_vel[i]) lt 3*lines_disp[i])]
+;cgoplot,x[lines_area],y[lines_area],psym=4,color='blue',thick=2
+
+
 SNR=max(lines_amp)/sqrt(variance(y-yfit))
 ;Param errors calculate as
 ;abs(dAmp/Amp)=0.3705/SNR
