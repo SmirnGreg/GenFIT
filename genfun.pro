@@ -332,10 +332,10 @@ if do_POLY_cont then begin
 	cont_0=[(contmin+contmax)*0.5,0,0]
 	cont=mpfitfun('poly',x[wherecont],y[wherecont],err[wherecont],cont_0,contfit=contfit,quiet=do_QUIET)
 	;if ~ do_QUIET then cgoplot,xdots,poly(xdots,cont),color='green',thick=2
+	;if ~ do_QUIET then cgoplot,x[wherecont],y[wherecont],psym=7,color='green',thick=5
 	contmin=cont
 	contmax=cont ;it will mute anyway
 	end
-
 param_min=[param_min,contmin]
 param_max=[param_max,contmax]
 
@@ -556,7 +556,7 @@ if do_AMP_ratio then begin
 		if do_POLY_cont then ycont=poly(xdots,res[N_param-3:N_param-1]) $
 			else ycont=intarr(N_elements(xdots))+res[N_param-1]
 		cgoplot,xdots,ycont,color='cyan',thick=2
-		cgoplot,xdots,call_function('gen_'+model_tN,xdots,[res,inst_vel]),color='blue',thick=2
+		cgoplot,xdots,call_function('gen_'+model_tN,xdots,[res,inst_vel]),color='blue',thick=3
 		cgoplot,x[usemm],[0,0],psym=2,thick=10,color='green'
 		print,'===TOTAL TIME==='
 		print, systime(1)-time
@@ -570,7 +570,11 @@ if do_AMP_ratio then begin
 ;if not do_QUIET then print, res
 ;this string is used if profile was created with generate_profile
 ;print, max(Y)/sqrt(Dispersion(nonoise-y)),(abs(gaussian1-res)/gaussian1)
-SNR=max(yfit)/sqrt(variance(y-yfit))
+lines_amp=res[0]
+for i=1,N_Lines-1 do begin
+	lines_amp=res[3*i]
+	end
+SNR=max(lines_amp)/sqrt(variance(y-yfit))
 ;Param errors calculate as
 ;abs(dAmp/Amp)=0.3705/SNR
 ;abs(dVel/Vel)=0.2593/SNR
@@ -580,7 +584,10 @@ reserror=res
 for i=0,N_Lines-1 do begin
 	for j=0,2 do  reserror[3*i+j]=res[3*i+j]*errorK[j]/SNR
 	end
-reserror(N_param-1)=0
+
+reserror[N_param-1]=!VALUES.F_NAN
+if do_POLY_cont then reserror[N_param-3:N_param-2]=!VALUES.F_NAN ; we haven't yet measured continuum errors
+
 if ~ do_QUIET then print, 'inst_vel=',inst_vel
 return,res
 end

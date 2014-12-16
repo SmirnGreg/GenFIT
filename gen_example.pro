@@ -19,11 +19,17 @@ gaussian1=[10,45,5] ;gaus1 is manually set
 ;print, gaussian1
 inst_vel=22.
 do_voigt=0
-data=generate_profile(SN=1,gaus1=[40,10,10],gaus2=[60,60,10],inst_vel=inst_vel,fileroot=root,do_voigt=do_voigt);,/poison)
+data=generate_profile(SN=0.1,gaus1=[40,10,10],gaus2=[60,60,10],inst_vel=inst_vel,fileroot=root,do_voigt=do_voigt);,/poison)
 ;Function Generate_Profile,SN=SN,gaus1=gaus1,gaus2=gaus2,gaus3=gaus3,do_voigt=do_voigt,inst_vel=inst_vel,fileroot=fileroot ;description
 ;print, data
 x=data[*,0]
-y=data[*,1]+10+0.1*x+0.005*x^2
+y=data[*,1]+10+0.2*x-0.01*x^2
+window,1
+cgplot, x,deriv(x,deriv(x,y))*max(y),color=red,thick=3
+cgoplot, x,y,color=green,thick=2,psym=7
+window,0
+;stop
+
 ;print, x,y
 ;print,y
 N_dots=300; to plot
@@ -43,7 +49,6 @@ res= genfun(x,y,err,model_type,N_lines,FWHM_eq=[1,1],inst_vel=inst_vel,yfit=yfit
 print,'Result ', res
 print,'Errors ', reserror
 print,'SNR ', SNR
-print, inst_vel
 ;print,y
 ;cgplot, x,y,psym=1
 ;cgoplot, x, yfit
