@@ -5,7 +5,7 @@
 ; управление parinfo из входа
 ; FWHM_equal=[1,1,0] -- есть!
 ; AMP_ratio=[3,2,0] -- есть!
-pro gen
+pro gen_example
 ;Using genfun
 
 

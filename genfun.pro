@@ -330,7 +330,7 @@ if do_POLY_cont then begin
 	;continuum a priori set as ax^2+bx+c
 	;fit with MPFIT y=P[0]+P[1]*x+P[2]*x^2 at x[wherecont]
 	cont_0=[(contmin+contmax)*0.5,0,0]
-	cont=mpfitfun('poly',x[wherecont],y[wherecont],err[wherecont],cont_0,contfit=contfit)
+	cont=mpfitfun('poly',x[wherecont],y[wherecont],err[wherecont],cont_0,contfit=contfit,quiet=do_QUIET)
 	;if ~ do_QUIET then cgoplot,xdots,poly(xdots,cont),color='green',thick=2
 	contmin=cont
 	contmax=cont ;it will mute anyway
