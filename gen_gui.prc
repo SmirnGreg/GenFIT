@@ -1,0 +1,44 @@
+HEADER
+; IDL Visual Widget Builder Resource file. Version 1
+; Generated on:	12/16/2014 22:43.30
+VERSION 1
+END
+
+WID_BASE_0 BASE 200 150 660 300
+TLB
+CAPTION "IDL"
+XPAD = 3
+YPAD = 3
+SPACE = 3
+BEGIN
+  WID_BASE_0_MBAR MENUBAR 0 0 0 0
+  BEGIN
+    menu_file PUSHBUTTON 0 0 0 0
+    VALUE "File"
+    MENU
+    BEGIN
+      menu_open PUSHBUTTON 0 0 0 0
+      VALUE "Open PV"
+      ONACTIVATE "gen_menu_open_event"
+      END
+    END
+  END
+  WID_DRAW_PV DRAW 40 40 400 140
+  FRAME = 1
+  ONBUTTON "gen_set_range"
+  END
+  WID_DRAW_Profile DRAW 480 40 140 140
+  END
+  WID_TEXT_0 TEXT 40 190 80 30
+  WIDTH = 20
+  HEIGHT = 1
+  END
+  WID_TEXT_1 TEXT 180 190 80 30
+  WIDTH = 20
+  HEIGHT = 1
+  END
+  WID_BUTTON_GENFIT PUSHBUTTON 280 190 80 30
+  VALUE "GenFIT!"
+  ALIGNCENTER
+  END
+END
