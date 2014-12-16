@@ -194,7 +194,7 @@ FUNCTION genfun,x,y,err,model_type,N_lines,QUIET=QUIET,inst_vel=inst_vel,yfit=yf
 ;    Fitting spectral lines
 ;
 ; CALLING SEQUENCE:
-;   result = GENFUN(X, Y, ERR, model_type, N_lines, /quiet, inst_vel=inst_vel, yfit=yfit)
+;   result = GENFUN(X, Y, ERR, model_type, N_lines, /Quiet, inst_vel=inst_vel, yfit=yfit)
 ;
 ; DESCRIPTION:
 ;
@@ -570,26 +570,22 @@ if do_AMP_ratio then begin
 ;if not do_QUIET then print, res
 ;this string is used if profile was created with generate_profile
 ;print, max(Y)/sqrt(Dispersion(nonoise-y)),(abs(gaussian1-res)/gaussian1)
+lines_amp=res[0]
+lines_vel=res[1]
+lines_disp=res[2]/2.35482
 
-lines_amp=fltarr(N_lines)
-lines_vel=fltarr(N_lines)
-lines_disp=fltarr(N_lines)
-
-for i=0,N_Lines-1 do begin
-	lines_amp[i]=res[3*i]
-	lines_vel[i]=res[3*i+1]
-	lines_disp[i]=res[3*i+2]/2.35482
+for i=1,N_Lines-1 do begin
+	lines_amp=res[3*i]
+	lines_vel=res[3*i+1]
+	lines_disp=res[3*i+2]/2.35482
 	end
 if model_type eq 'voigt' then begin
 	lines_disp=sqrt(lines_disp^2+(inst_vel/2.35482)^2)
 	endif
-lines_area=where(abs(x-lines_vel[0]) lt 3*lines_disp[0])
-for i=1,N_Lines-1 do lines_area=[lines_area,where(abs(x-lines_vel[i]) lt 3*lines_disp[i])]
-cont_area=where(abs(x-lines_vel[N_Lines-1] gt 3*lines_disp[N_Lines-1]))
-for i=N_Lines-2,0,-1 do cont_area=where(abs(x[cont_area]-lines_vel[i]) gt 3*lines_disp[i])
+;lines_area=where(abs(x-lines_vel[0]) lt 3*lines_disp[0])
+;for i=1,N_Lines-1 do lines_area=[lines_area,where(abs(x-lines_vel[i]) lt 3*lines_disp[i])]
+;cgoplot,x[lines_area],y[lines_area],psym=4,color='blue',thick=2
 
-cgoplot,x[lines_area],y[lines_area],psym=4,color='pink',thick=2
-;cgoplot,x[cont_area],y[cont_area],psym=4,color='pink',thick=2
 
 SNR=max(lines_amp)/sqrt(variance(y-yfit))
 ;Param errors calculate as
