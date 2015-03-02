@@ -9,6 +9,35 @@
 ;
 pro gen_gui_eventcb
 end
+
+
+pro gengui_clear_textbox,Event
+	outtext=WIDGET_INFO(Event.top, FIND_BY_UNAME='WID_TEXT_ProfStart');
+	widget_control,outtext,SET_VALUE=''
+	outtext=WIDGET_INFO(Event.top, FIND_BY_UNAME='WID_TEXT_ProfEnd');
+	widget_control,outtext,SET_VALUE=''
+	common flag_set_range, fsr
+	fsr=0
+	end
+pro gengui_redraw_PV, Event
+	print, 'START REDRAW'
+	common data_PV, pv,h
+
+	if N_elements(pv) gt 0 then begin
+		print, "REDRAW IS OK'
+		wDraw = WIDGET_INFO(Event.top, FIND_BY_UNAME='WID_DRAW_PV');
+    	;Make sure something was found.
+    	IF(wDraw GT 0)THEN BEGIN
+      	 	WIDGET_CONTROL, wDraw, GET_VALUE=idDraw
+         	WSET,idDraw
+         	im_pv=CONGRID(255-bytscl(sigrange(pv)), !D.X_SIZE, !D.Y_SIZE)
+         	cgimage,im_pv
+			gengui_clear_textbox,Event
+      		ENDIF
+		endif
+end
+
+
 ;-----------------------------------------------------------------
 ; Activate Button Callback Procedure.
 ; Argument:
@@ -32,17 +61,34 @@ end
 
 ;-----------------------------------------------------------------
 pro gen_menu_open_event, Event
-
 sFile = DIALOG_PICKFILE(FILTER='*.f*s')
    IF(sFile NE "")THEN BEGIN
-	  pv=readfits(sFile,h)
-	  wDraw = WIDGET_INFO(Event.top, FIND_BY_UNAME='WID_DRAW_PV');
-      ; Make sure something was found.
-      IF(wDraw GT 0)THEN BEGIN
+   	common data_PV, pv,h
+	pv=readfits(sFile,h)
+	CRVAL1  =  sxpar(h, "CRVAL1")
+	CDELT1  =  sxpar(h, "CDELT1")
+	CRPIX1  =  sxpar(h, "CRPIX1")
+	NAXIS1  =  sxpar(h, "NAXIS1")
+	CRVAL2  =  sxpar(h, "CRVAL2")
+	CDELT2  =  sxpar(h, "CDELT2")
+	CRPIX2  =  sxpar(h, "CRPIX2")
+	NAXIS2  =  sxpar(h, "NAXIS2")
+	x0=10
+	y0=10
+	xs=0
+	ys=0
+	vel=(findgen(NAXIS2)-CRPIX2)*CDELT2+CRVAL2
+	pos=(findgen(NAXIS1)-CRPIX1)*CDELT1+CRVAL1
+	print,pos
+	wDraw = WIDGET_INFO(Event.top, FIND_BY_UNAME='WID_DRAW_PV');
+    ;Make sure something was found.
+    IF(wDraw GT 0)THEN BEGIN
       	 WIDGET_CONTROL, wDraw, GET_VALUE=idDraw
          WSET,idDraw
          im_pv=CONGRID(255-bytscl(sigrange(pv)), !D.X_SIZE, !D.Y_SIZE)
-         tv,im_pv
+         cgimage,im_pv
+		common flag_set_range, fsr
+		fsr=0
       ENDIF
    ENDIF
 
@@ -71,6 +117,35 @@ end
 
 ;-----------------------------------------------------------------
 pro gen_set_range, Event
-if event.type eq 0 then print,event.x,event.y
+if event.type eq 0 then begin
+	common data_PV,pv,h
+	print,event.x,event.y
+	NAXIS1  =  sxpar(h, "NAXIS1")
+	CRVAL2  =  sxpar(h, "CRVAL2")
+	CDELT2  =  sxpar(h, "CDELT2")
+	CRPIX2  =  sxpar(h, "CRPIX2")
+	NAXIS2  =  sxpar(h, "NAXIS2")
+	vel=(findgen(NAXIS2)-CRPIX2)*CDELT2+CRVAL2
+	wDraw = WIDGET_INFO(Event.top, FIND_BY_UNAME='WID_DRAW_PV');
+	WIDGET_CONTROL, wDraw, GET_VALUE=idDraw
+	wset,idDraw
+    ;Make sure something was found.
+	common flag_set_range, fsr
+	print,fsr
+	if not fsr then begin ;first mark
+		gengui_redraw_PV,Event
+		outtext=WIDGET_INFO(Event.top, FIND_BY_UNAME='WID_TEXT_ProfStart');
+		widget_control,outtext,SET_VALUE=string(event.x)
+		plots, event.x, 0,/device,color='0000FF'x
+		plots, event.x, 200,/device,/continue,color='0000FF'x
+		fsr=1
+		endif else begin  ;second mark
+		outtext=WIDGET_INFO(Event.top, FIND_BY_UNAME='WID_TEXT_ProfEnd');
+		widget_control,outtext,SET_VALUE=string(event.x)
+		plots, event.x, 0,/device,color='00FF00'x
+		plots, event.x, 200,/device,/continue,color='00FF00'x
+		fsr=0
 
+		endelse
+	endif
 end
