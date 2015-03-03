@@ -77,8 +77,8 @@ sFile = DIALOG_PICKFILE(FILTER='*.f*s')
 	y0=10
 	xs=0
 	ys=0
-	vel=(findgen(NAXIS2)-CRPIX2)*CDELT2+CRVAL2
-	pos=(findgen(NAXIS1)-CRPIX1)*CDELT1+CRVAL1
+	vel=(findgen(NAXIS2)-CRPIX2+1)*CDELT2+CRVAL2
+	pos=(findgen(NAXIS1)-CRPIX1+1)*CDELT1+CRVAL1
 	print,pos
 	wDraw = WIDGET_INFO(Event.top, FIND_BY_UNAME='WID_DRAW_PV');
     ;Make sure something was found.
