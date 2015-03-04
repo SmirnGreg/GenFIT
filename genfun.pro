@@ -250,7 +250,7 @@ if keyword_set(FWHM_eq) then begin
 	endif
 
 if keyword_set(AMP_ratio) then begin
-	if (N_elements(AMP_ratio) ne N_lines) and (total(AMP_ratio^2) ne 0) then begin
+	if (N_elements(AMP_ratio) ne N_lines) or (total(AMP_ratio^2) eq 0) then begin
 		do_AMP_ratio=0
 		print, '====ERROR===='
 		print, 'AMP_ratio -- float 1-dimension N_lines-size array. If AMP_ratio[i]/AMP_ratio[j]=C then AMP[i]/AMP[j]=C,'
@@ -588,7 +588,7 @@ for i=1,N_Lines-1 do lines_area=[lines_area,where(abs(x-lines_vel[i]) lt 3*lines
 cont_area=where(abs(x-lines_vel[N_Lines-1] gt 3*lines_disp[N_Lines-1]))
 for i=N_Lines-2,0,-1 do cont_area=where(abs(x[cont_area]-lines_vel[i]) gt 3*lines_disp[i])
 
-cgoplot,x[lines_area],y[lines_area],psym=4,color='pink',thick=2
+if ~do_QUIET then cgoplot,x[lines_area],y[lines_area],psym=4,color='pink',thick=2
 ;lines_area=where(abs(x-lines_vel[0]) lt 3*lines_disp[0])
 ;for i=1,N_Lines-1 do lines_area=[lines_area,where(abs(x-lines_vel[i]) lt 3*lines_disp[i])]
 ;cont_area=where(abs(x-lines_vel[N_Lines-1] gt 3*lines_disp[N_Lines-1]))
