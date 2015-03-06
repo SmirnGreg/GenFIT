@@ -305,8 +305,6 @@ yn=yn/total(yn)
 moment1=total(xuse*yn)
 moment2=total(xuse^2*yn)
 disp=sqrt(moment2-moment1^2)
-
-
 contmin=min(y[wherecont],contmini)
 contmax=max(y[wherecont],contmaxi)
 mut=0.35
@@ -314,8 +312,8 @@ vmin=min(x)
 vmax=max(x)
 ymin=max(y)*0.1
 ymax=max(y)*1.2
-dispmin=0.2*disp
-dispmax=2.5*disp
+dispmin=0.8*disp
+dispmax=2.6*disp ;2.35*disp=FWHM
 
 par_min_i=[ymin,vmin,dispmin]
 par_max_i=[ymax,vmax,dispmax]
@@ -330,9 +328,9 @@ if do_POLY_cont then begin
 	;continuum a priori set as ax^2+bx+c
 	;fit with MPFIT y=P[0]+P[1]*x+P[2]*x^2 at x[wherecont]
 	cont_0=[(contmin+contmax)*0.5,0,0]
-	cont=mpfitfun('poly',x[wherecont],y[wherecont],err[wherecont],cont_0,contfit=contfit,quiet=do_QUIET)
+	cont=mpfitfun('poly',x[wherecont],y[wherecont],err[wherecont],cont_0,yfit=contfit,quiet=do_QUIET)
 	;if ~ do_QUIET then cgoplot,xdots,poly(xdots,cont),color='green',thick=2
-	if ~ do_QUIET then cgoplot,x[wherecont],y[wherecont],psym=7,color='green',thick=5
+	;if ~ do_QUIET then cgoplot,x[wherecont],y[wherecont],psym=7,color='green',thick=5
 	contmin=cont
 	contmax=cont ;it will mute anyway
 	end
@@ -347,9 +345,11 @@ wss=fltarr(2*N)
 ;generate
 
 for i=0, N-1 do begin
-	for j=0, N_param-1 do begin
-		param[j,i]=(param_max[j]-param_min[j])*randomu(seed)+param_min[j]
-		end
+	;for j=0, N_param-1 do begin
+	;	param[j,i]=(param_max[j]-param_min[j])*randomu(seed)+param_min[j]
+	;	end
+	param[*,i]=(param_max-param_min)*randomu(seed,N_param)+param_min
+
 	if do_FWHM_eq then begin
 		;sort by velocity
 		vel2sort=param[1,i]
@@ -508,7 +508,7 @@ if model_type eq 'voigt' then begin
 	endelse
 for i=0, N_Lines-1 do begin
 	parinfo[i*3].limited=[1,1]
-	parinfo[i*3].limits=[ymin,ymax]
+	parinfo[i*3].limits=[ymin,ymax*1.1]
 	;If genetic algorithm calculated fit out from limit or close to limit, change it.
 	if model_param[i*3] ge ymax-0.05*(ymax-ymin) then begin
 		model_param[i*3]=ymax-0.05*(ymax-ymin)
@@ -583,12 +583,12 @@ for i=0,N_Lines-1 do begin
 if model_type eq 'voigt' then begin
 	lines_disp=sqrt(lines_disp^2+(inst_vel/2.35482)^2)
 	endif
-lines_area=where(abs(x-lines_vel[0]) lt 3*lines_disp[0])
-for i=1,N_Lines-1 do lines_area=[lines_area,where(abs(x-lines_vel[i]) lt 3*lines_disp[i])]
-cont_area=where(abs(x-lines_vel[N_Lines-1] gt 3*lines_disp[N_Lines-1]))
-for i=N_Lines-2,0,-1 do cont_area=where(abs(x[cont_area]-lines_vel[i]) gt 3*lines_disp[i])
+;lines_area=where(abs(x-lines_vel[0]) lt 3*lines_disp[0])
+;for i=1,N_Lines-1 do lines_area=[lines_area,where(abs(x-lines_vel[i]) lt 3*lines_disp[i])]
+;cont_area=where(abs(x-lines_vel[N_Lines-1] gt 3*lines_disp[N_Lines-1]))
+;for i=N_Lines-2,0,-1 do cont_area=where(abs(x[cont_area]-lines_vel[i]) gt 3*lines_disp[i])
 
-if ~do_QUIET then cgoplot,x[lines_area],y[lines_area],psym=4,color='pink',thick=2
+;if ~do_QUIET then cgoplot,x[lines_area],y[lines_area],psym=4,color='pink',thick=2
 ;lines_area=where(abs(x-lines_vel[0]) lt 3*lines_disp[0])
 ;for i=1,N_Lines-1 do lines_area=[lines_area,where(abs(x-lines_vel[i]) lt 3*lines_disp[i])]
 ;cont_area=where(abs(x-lines_vel[N_Lines-1] gt 3*lines_disp[N_Lines-1]))
