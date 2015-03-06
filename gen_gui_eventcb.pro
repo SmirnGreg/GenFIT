@@ -285,30 +285,7 @@ table_out_arr[*,3]=res[3*N_lines:*]
 wTable=widget_info(event.top, find_by_uname='WID_TABLE_OUT')
 widget_control,wTable,set_value=string(table_out_arr)
 end
-;-----------------------------------------------------------------
-; Droplist Select Item Callback Procedure.
-; Argument:
-;   Event structure:
-;
-;   {WIDGET_DROPLIST, ID:0L, TOP:0L, HANDLER:0L, INDEX:0L }
-;
-;   ID is the widget ID of the component generating the event. TOP is
-;       the widget ID of the top level widget containing ID. HANDLER
-;       contains the widget ID of the widget associated with the
-;       handler routine.
 
-;   INDEX returns the index of the selected item. This can be used to
-;       index the array of names originally used to set the widget's
-;       value.
-
-;   Retrieve the IDs of other widgets in the widget hierarchy using
-;       id=widget_info(Event.top, FIND_BY_UNAME=name)
-
-;-----------------------------------------------------------------
-pro gengui_N_Lines_select, Event
-common gengui_N_Lines
-N_Lines=Event.index
-end
 ;-----------------------------------------------------------------
 ; Activate Button Callback Procedure.
 ; Argument:
@@ -337,4 +314,28 @@ widget_control,event.id,get_value=wNAME
 FWHM_EQ_INDEX=wNAME-1
 FWHM_EQ[FWHM_EQ_INDEX]=event.select
 
+end
+;-----------------------------------------------------------------
+; Droplist Select Item Callback Procedure.
+; Argument:
+;   Event structure:
+;
+;   {WIDGET_DROPLIST, ID:0L, TOP:0L, HANDLER:0L, INDEX:0L }
+;
+;   ID is the widget ID of the component generating the event. TOP is
+;       the widget ID of the top level widget containing ID. HANDLER
+;       contains the widget ID of the widget associated with the
+;       handler routine.
+
+;   INDEX returns the index of the selected item. This can be used to
+;       index the array of names originally used to set the widget's
+;       value.
+
+;   Retrieve the IDs of other widgets in the widget hierarchy using
+;       id=widget_info(Event.top, FIND_BY_UNAME=name)
+
+;-----------------------------------------------------------------
+pro gengui_N_Lines_select, Event
+common gengui_N_Lines
+N_Lines=Event.index
 end
