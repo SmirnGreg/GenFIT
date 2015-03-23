@@ -10,14 +10,18 @@
 pro gen_gui_eventcb
 end
 
-pro gen_gui_loadcommons
+pro gen_gui_loadcommons,Event
 common flag_set_range, fsr
 common data_PV, pv,h
 common data_prof, vel,prof
 common gengui_N_Lines, N_Lines
 common gengui_FWHM_EQ, FWHM_EQ
+common gengui_model,do_voigt,inst_vel,poly_cont
+do_voigt=0
 FWHM_EQ=intarr(3)
 N_Lines=0
+poly_cont=0
+inst_vel=22.
 end
 
 pro gengui_redrawprof,event
@@ -206,7 +210,7 @@ end
 
 ;-----------------------------------------------------------------
 pro gen_onstart, wWidget, _EXTRA=_VWBExtra_
-gen_gui_loadcommons
+gen_gui_loadcommons,event
 end
 ;-----------------------------------------------------------------
 ; Activate Button Callback Procedure.
@@ -234,8 +238,13 @@ pro gengui_run, Event
 common data_prof
 common gengui_N_Lines
 common gengui_FWHM_EQ
+common gengui_model
 ;common gengui_AMP_Ratio
 ;print, N_Lines
+print,inst_vel
+gengui_getinst_vel,event
+print, inst_vel
+
 if N_Lines eq 0 then begin
 	N_Lines=gen_linecounter(vel,prof)
 	wN_Lines = WIDGET_INFO(Event.top, FIND_BY_UNAME='WID_DROPLIST_N_Lines')
@@ -253,8 +262,7 @@ for i=1, N_Lines do begin
 	end
 AMP_RATIO_2use=AMP_RATIO[0:N_lines-1]
 FWHM_eq_2use=FWHM_EQ[0:N_lines-1]
-inst_vel=22.
-model_type='voigt'
+if do_voigt then model_type='voigt' else model_type='gaus'
 err=prof/prof*2
 wGraph = WIDGET_INFO(Event.top, FIND_BY_UNAME='WID_DRAW_Profile')
 WIDGET_CONTROL, wGraph, GET_VALUE=idGraph
@@ -264,7 +272,7 @@ print, minmax(prof)
 ;stop
 gengui_redrawprof,event
 res= genfun(vel,prof,err,model_type,N_lines,inst_vel=inst_vel,yfit=yfit,$
-	reserror=reserror,SNR=SNR,FWHM_eq=FWHM_eq_2use, AMP_ratio=AMP_RATIO_2use,/quiet)
+	reserror=reserror,SNR=SNR,FWHM_eq=FWHM_eq_2use, AMP_ratio=AMP_RATIO_2use,/quiet,poly_cont=poly_cont)
 
 cgoplot,vel,yfit,color='blue',thick=2
 model_tN_single=model_type + '1'
@@ -338,4 +346,107 @@ end
 pro gengui_N_Lines_select, Event
 common gengui_N_Lines
 N_Lines=Event.index
+end
+;-----------------------------------------------------------------
+; Activate Button Callback Procedure.
+; Argument:
+;   Event structure:
+;
+;   {WIDGET_BUTTON, ID:0L, TOP:0L, HANDLER:0L, SELECT:0}
+;
+;   ID is the widget ID of the component generating the event. TOP is
+;       the widget ID of the top level widget containing ID. HANDLER
+;       contains the widget ID of the widget associated with the
+;       handler routine.
+
+;   SELECT is set to 1 if the button was set, and 0 if released.
+;       Normal buttons do not generate events when released, so
+;       SELECT will always be 1. However, toggle buttons (created by
+;       parenting a button to an exclusive or non-exclusive base)
+;       return separate events for the set and release actions.
+
+;   Retrieve the IDs of other widgets in the widget hierarchy using
+;       id=widget_info(Event.top, FIND_BY_UNAME=name)
+
+;-----------------------------------------------------------------
+pro gengui_gaus_radio, Event
+common gengui_model
+do_voigt=0
+wInstVel = WIDGET_INFO(Event.top, FIND_BY_UNAME='WID_TEXT_inst_vel')
+WIDGET_CONTROL, wInstVel, editable=0
+end
+;-----------------------------------------------------------------
+; Activate Button Callback Procedure.
+; Argument:
+;   Event structure:
+;
+;   {WIDGET_BUTTON, ID:0L, TOP:0L, HANDLER:0L, SELECT:0}
+;
+;   ID is the widget ID of the component generating the event. TOP is
+;       the widget ID of the top level widget containing ID. HANDLER
+;       contains the widget ID of the widget associated with the
+;       handler routine.
+
+;   SELECT is set to 1 if the button was set, and 0 if released.
+;       Normal buttons do not generate events when released, so
+;       SELECT will always be 1. However, toggle buttons (created by
+;       parenting a button to an exclusive or non-exclusive base)
+;       return separate events for the set and release actions.
+
+;   Retrieve the IDs of other widgets in the widget hierarchy using
+;       id=widget_info(Event.top, FIND_BY_UNAME=name)
+
+;-----------------------------------------------------------------
+pro gengui_voigt_radio, Event
+common gengui_model
+do_voigt=1
+wInstVel = WIDGET_INFO(Event.top, FIND_BY_UNAME='WID_TEXT_inst_vel')
+WIDGET_CONTROL, wInstVel, editable=1
+end
+
+;-----------------------------------------------------------------
+; Notify Realize Callback Procedure.
+; Argument:
+;   wWidget - ID number of specific widget.
+;
+;
+;   Retrieve the IDs of other widgets in the widget hierarchy using
+;       id=widget_info(Event.top, FIND_BY_UNAME=name)
+
+;-----------------------------------------------------------------
+pro gengui_gaus_defaultset, wWidget
+WIDGET_CONTROL, wWidget,/set_button
+end
+;-----------------------------------------------------------------
+; Activate Button Callback Procedure.
+; Argument:
+;   Event structure:
+;
+;   {WIDGET_BUTTON, ID:0L, TOP:0L, HANDLER:0L, SELECT:0}
+;
+;   ID is the widget ID of the component generating the event. TOP is
+;       the widget ID of the top level widget containing ID. HANDLER
+;       contains the widget ID of the widget associated with the
+;       handler routine.
+
+;   SELECT is set to 1 if the button was set, and 0 if released.
+;       Normal buttons do not generate events when released, so
+;       SELECT will always be 1. However, toggle buttons (created by
+;       parenting a button to an exclusive or non-exclusive base)
+;       return separate events for the set and release actions.
+
+;   Retrieve the IDs of other widgets in the widget hierarchy using
+;       id=widget_info(Event.top, FIND_BY_UNAME=name)
+
+;-----------------------------------------------------------------
+pro gengui_changePOLYCONT, Event
+common gengui_model
+if event.select then poly_cont=1 else poly_cont=0
+end
+
+pro gengui_getinst_vel,event
+common gengui_model
+wInstVel = WIDGET_INFO(Event.top, FIND_BY_UNAME='WID_TEXT_inst_vel')
+WIDGET_CONTROL, wInstVel, GET_VALUE=inst_vel_string
+inst_vel=float(inst_vel_string)
 end

@@ -3,7 +3,7 @@
 ;     generated and should not be modified.
 
 ; 
-; Generated on:	03/06/2015 15:21.56
+; Generated on:	03/23/2015 13:30.31
 ; 
 pro WID_BASE_0_event, Event
 
@@ -47,6 +47,18 @@ pro WID_BASE_0_event, Event
       if( Tag_Names(Event, /STRUCTURE_NAME) eq 'WIDGET_DROPLIST' )then $
         gengui_N_Lines_select, Event
     end
+    Widget_Info(wWidget, FIND_BY_UNAME='WID_Radio_GAUS'): begin
+      if( Tag_Names(Event, /STRUCTURE_NAME) eq 'WIDGET_BUTTON' )then $
+        gengui_gaus_radio, Event
+    end
+    Widget_Info(wWidget, FIND_BY_UNAME='WID_Radio_VOIGT'): begin
+      if( Tag_Names(Event, /STRUCTURE_NAME) eq 'WIDGET_BUTTON' )then $
+        gengui_voigt_radio, Event
+    end
+    Widget_Info(wWidget, FIND_BY_UNAME='WID_POLY_CONT'): begin
+      if( Tag_Names(Event, /STRUCTURE_NAME) eq 'WIDGET_BUTTON' )then $
+        gengui_changePOLYCONT, Event
+    end
     else:
   endcase
 
@@ -57,7 +69,7 @@ pro WID_BASE_0, GROUP_LEADER=wGroup, _EXTRA=_VWBExtra_
   Resolve_Routine, 'gen_gui_eventcb',/COMPILE_FULL_FILE  ; Load event callback routines
   
   WID_BASE_0 = Widget_Base( GROUP_LEADER=wGroup, UNAME='WID_BASE_0'  $
-      ,SCR_XSIZE=743 ,SCR_YSIZE=417 ,TITLE='GENFit GUI | PV-analysis'+ $
+      ,SCR_XSIZE=733 ,SCR_YSIZE=435 ,TITLE='GENFit GUI | PV-analysis'+ $
       ' | G.V. Smirnov-Pinchukov' ,SPACE=3 ,XPAD=3 ,YPAD=3  $
       ,MBAR=WID_BASE_0_MBAR)
 
@@ -101,8 +113,8 @@ pro WID_BASE_0, GROUP_LEADER=wGroup, _EXTRA=_VWBExtra_
   
   WID_TABLE_OUT = Widget_Table(WID_BASE_0, UNAME='WID_TABLE_OUT'  $
       ,FRAME=1 ,XOFFSET=40 ,YOFFSET=230 ,SCR_XSIZE=400 ,SCR_YSIZE=111  $
-      ,COLUMN_LABELS=[ 'Amp', 'Vel', 'FWHM' ] ,ROW_LABELS=[ '1', '2',  $
-      '3', 'Cont', '' ] ,XSIZE=3 ,YSIZE=4)
+      ,COLUMN_LABELS=[ 'Amplitude', 'Velocity', 'FWHM Gaus' ]  $
+      ,ROW_LABELS=[ '1', '2', '3', 'Cont', '' ] ,XSIZE=3 ,YSIZE=4)
 
   
   WID_BASE_FWHM_eq = Widget_Base(WID_BASE_0, UNAME='WID_BASE_FWHM_eq'  $
@@ -177,6 +189,47 @@ pro WID_BASE_0, GROUP_LEADER=wGroup, _EXTRA=_VWBExtra_
   WID_LABEL_4 = Widget_Label(WID_BASE_0, UNAME='WID_LABEL_4'  $
       ,XOFFSET=555 ,YOFFSET=240 ,SCR_XSIZE=60 ,SCR_YSIZE=20  $
       ,/ALIGN_CENTER ,VALUE='AMP Ratio')
+
+  
+  WID_BASE_GV = Widget_Base(WID_BASE_0, UNAME='WID_BASE_GV'  $
+      ,XOFFSET=620 ,YOFFSET=260 ,SCR_XSIZE=64 ,SCR_YSIZE=54  $
+      ,TITLE='IDL' ,COLUMN=1 ,/GRID_LAYOUT ,/EXCLUSIVE)
+
+  
+  WID_Radio_GAUS = Widget_Button(WID_BASE_GV, UNAME='WID_Radio_GAUS'  $
+      ,SCR_XSIZE=74 ,SCR_YSIZE=26  $
+      ,NOTIFY_REALIZE='gengui_gaus_defaultset' ,/ALIGN_LEFT  $
+      ,VALUE='Gaussian')
+
+  
+  WID_Radio_VOIGT = Widget_Button(WID_BASE_GV,  $
+      UNAME='WID_Radio_VOIGT' ,YOFFSET=26 ,SCR_XSIZE=54 ,SCR_YSIZE=26  $
+      ,/ALIGN_LEFT ,VALUE='Voigt')
+
+  
+  WID_TEXT_inst_vel = Widget_Text(WID_BASE_0,  $
+      UNAME='WID_TEXT_inst_vel' ,XOFFSET=620 ,YOFFSET=320  $
+      ,SCR_XSIZE=29 ,SCR_YSIZE=20 ,VALUE=[ '22.0' ] ,XSIZE=20  $
+      ,YSIZE=1)
+
+  
+  WID_LABEL_5 = Widget_Label(WID_BASE_0, UNAME='WID_LABEL_5'  $
+      ,XOFFSET=649 ,YOFFSET=323 ,SCR_XSIZE=35 ,SCR_YSIZE=20  $
+      ,/ALIGN_LEFT ,VALUE='inst vel')
+
+  
+  WID_LABEL_6 = Widget_Label(WID_BASE_0, UNAME='WID_LABEL_6'  $
+      ,XOFFSET=620 ,YOFFSET=240 ,SCR_XSIZE=60 ,SCR_YSIZE=18  $
+      ,/ALIGN_CENTER ,VALUE='Model')
+
+  
+  WID_BASE_1 = Widget_Base(WID_BASE_0, UNAME='WID_BASE_1'  $
+      ,XOFFSET=480 ,YOFFSET=346 ,TITLE='IDL' ,COLUMN=1  $
+      ,/NONEXCLUSIVE)
+
+  
+  WID_POLY_CONT = Widget_Button(WID_BASE_1, UNAME='WID_POLY_CONT'  $
+      ,/ALIGN_LEFT ,VALUE='Quadratic cont')
 
   Widget_Control, /REALIZE, WID_BASE_0
 

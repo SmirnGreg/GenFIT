@@ -1,10 +1,10 @@
 HEADER
 ; IDL Visual Widget Builder Resource file. Version 1
-; Generated on:	03/06/2015 15:21.53
+; Generated on:	03/23/2015 14:04.32
 VERSION 1
 END
 
-WID_BASE_0 BASE 0 0 743 417
+WID_BASE_0 BASE 0 0 733 435
 ONPOSTCREATE "gen_onstart"
 TLB
 CAPTION "GENFit GUI | PV-analysis | G.V. Smirnov-Pinchukov"
@@ -52,9 +52,9 @@ BEGIN
   N_ROWS = 4
   N_COLS = 3
   NUMCOLLABELS = 3
-  COLLABEL "Amp"
-  COLLABEL "Vel"
-  COLLABEL "FWHM"
+  COLLABEL "Amplitude"
+  COLLABEL "Velocity"
+  COLLABEL "FWHM Gaus"
   NUMROWLABELS = 5
   ROWLABEL "1"
   ROWLABEL "2"
@@ -140,5 +140,49 @@ BEGIN
   WID_LABEL_4 LABEL 555 240 60 20
   VALUE "AMP Ratio"
   ALIGNCENTER
+  END
+  WID_BASE_GV BASE 620 260 64 54
+  COLUMNS = 1
+  EXCLUSIVE
+  GRIDED
+  CAPTION "IDL"
+  BEGIN
+    WID_Radio_GAUS PUSHBUTTON -1 -1 74 26
+    VALUE "Gaussian"
+    ALIGNLEFT
+    REALIZE "gengui_gaus_defaultset"
+    ONACTIVATE "gengui_gaus_radio"
+    END
+    WID_Radio_VOIGT PUSHBUTTON -1 -1 54 26
+    VALUE "Voigt"
+    ALIGNLEFT
+    ONACTIVATE "gengui_voigt_radio"
+    END
+  END
+  WID_TEXT_inst_vel TEXT 620 320 29 20
+  NUMITEMS = 1
+  ITEM "22.0"
+  ALLEVENTS
+  WIDTH = 20
+  HEIGHT = 1
+  END
+  WID_LABEL_5 LABEL 649 323 35 20
+  VALUE "inst vel"
+  ALIGNLEFT
+  END
+  WID_LABEL_6 LABEL 620 240 60 18
+  VALUE "Model"
+  ALIGNCENTER
+  END
+  WID_BASE_1 BASE 480 346 0 0
+  COLUMNS = 1
+  NONEXCLUSIVE
+  CAPTION "IDL"
+  BEGIN
+    WID_POLY_CONT PUSHBUTTON -1 -1 0 0
+    VALUE "Quadratic cont"
+    ALIGNLEFT
+    ONACTIVATE "gengui_changePOLYCONT"
+    END
   END
 END
