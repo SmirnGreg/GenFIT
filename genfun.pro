@@ -112,6 +112,7 @@ if ~ do_QUIET then cgplot,x,y,psym=7,color='red',thick=5
 
 ;calculates dispersion to predict FWHM
 yn=double((y-min(y))/(max(y)-min(y)))
+;print,y
 use=where(yn gt 0.1)
 wherecont=where(yn lt 0.1)
 ;print, use
@@ -119,6 +120,8 @@ usemm=minmax(use)
 if usemm[0] ge 2 then usemm[0]=usemm[0]-2
 if usemm[1] lt N_Elements(yn)-3 then usemm[1]=usemm[1]+2
 ;print,usemm
+;print, size(x)
+
 ;stop
 yn=double(yn[usemm[0]:usemm[1]])
 xuse=double(x[usemm[0]:usemm[1]])
@@ -144,8 +147,8 @@ for i=2,N_lines do begin
 	param_min=[param_min,par_min_i]
 	param_max=[param_max,par_max_i]
 end
-print, param_min
-print, param_max
+;print, param_min
+;print, param_max
 
 if do_POLY_cont then begin
 	;continuum a priori set as ax^2+bx+c
@@ -263,7 +266,7 @@ while eps gt 0 do begin
 	for i=0,2*N-1 do begin
 		;rss[i]=gen_ResSumSquares(param[*,i],x,y,model_tN,inst_vel=inst_vel)
 		wss[i]=gen_WeightSumSquares(param[*,i],x,y,err,model_tN,inst_vel=inst_vel)
-	end
+		end
 	order=sort(wss)
 	param=(param[*,order])
 	;kill the worst N params
