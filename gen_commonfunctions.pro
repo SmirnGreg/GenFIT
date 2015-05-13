@@ -1,15 +1,8 @@
 FUNCTION gen_VOIGT, x, param, inst_vel=inst_vel
-
-  vel=inst_vel/2.35482
-  disp=param[2]/2.35482
-  b=(x-param[1])/(sqrt(2.)*disp)
-  y=vel/(sqrt(2.)*disp)
-  res=voigt(y,b)/(sqrt(2.*!pi)*disp)
-  norm=max(res)
-  res=param[0]*res/norm
-
-
+	res=voigt(inst_vel* 0.832555/(param[2]),(x-param[1])* 1.66511/param[2])
+	res=res/max(res)*param[0]
 RETURN, res
+
 END
 
 function gen_gaus1,x,param

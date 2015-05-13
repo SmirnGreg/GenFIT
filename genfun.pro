@@ -5,7 +5,7 @@ FUNCTION genfun,x,y,err,model_type,N_lines,QUIET=QUIET,inst_vel=inst_vel,yfit=yf
 ;   GENFUN
 ;
 ; AUTHOR:
-;   Grigory V. Smirnov-Pnchukov, Moscow
+;   Grigory V. Smirnov-Pinchukov, Moscow
 ;   SmirnGreg@mail.ru
 ;
 ; PURPOSE:
